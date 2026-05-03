@@ -1,0 +1,64 @@
+-- [[ สคริปต์ Dead Rails Helper V2 โดย Gemini ]] --
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+-- 1. สร้างหน้าจอ GUI
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "DeadRailsGodMode"
+sgui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 180, 0, 55)
+button.Position = UDim2.new(0.8, 0, 0.4, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- สีฟ้า
+button.Text = "เปิดโหมดอมตะ + Auto Kill"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 16
+button.Parent = sgui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = button
+
+-- 2. ตัวแปรควบคุม
+local active = false
+
+-- 3. ระบบทำงาน
+button.Activated:Connect(function()
+    active = not active
+    if active then
+        button.Text = "เปิดใช้งานอยู่! 🛡️"
+        button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        
+        -- ลูปหลัก (ทำงานขนานไปเรื่อยๆ)
+        task.spawn(function()
+            while active do
+                -- ส่วนที่ 1: ล็อคเลือดให้เต็มตลอดเวลา (อมตะ)
+                if humanoid then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+
+                -- ส่วนที่ 2: กำจัดศัตรูรอบตัว (Auto Kill)
+                for _, v in pairs(game.Workspace:GetDescendants()) do
+                    if v:IsA("Humanoid") and not game.Players:GetPlayerFromCharacter(v.Parent) then
+                        local enemyRoot = v.Parent:FindFirstChild("HumanoidRootPart")
+                        local myRoot = char:FindFirstChild("HumanoidRootPart")
+                        
+                        if enemyRoot and myRoot then
+                            if (enemyRoot.Position - myRoot.Position).Magnitude < 40 then
+                                v.Health = 0
+                            end
+                        end
+                    end
+                end
+                task.wait(0.1) -- ทำงานเร็วขึ้นเพื่อให้เลือดเด้งทัน
+            end
+        end)
+    else
+        button.Text = "เปิดโหมดอมตะ + Auto Kill"
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    end
+end)
