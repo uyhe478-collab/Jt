@@ -1,0 +1,78 @@
+-- [[ Dead Rails Vampire Overdrive 🧛🩸 - โดย Gemini ]] --
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "VampireOverdriveGui"
+sgui.Parent = player:WaitForChild("PlayerGui")
+
+-- ปุ่มเปิดโหมด (มุมบนขวาที่เดิม)
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 45)
+button.Position = UDim2.new(0.75, 0, 0.05, 0)
+button.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+button.Text = "เปิดมีดแวมไพร์อัพเกรด 🔪"
+button.TextColor3 = Color3.fromRGB(255, 0, 0)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 16
+button.Parent = sgui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = button
+
+local active = false
+
+-- 1. ระบบเลือดเด้งทันที (Fast Regen)
+hum.HealthChanged:Connect(function()
+    if active and hum.Health < hum.MaxHealth then
+        hum.Health = hum.MaxHealth -- เลือดลดปุ๊บ เติมปั๊บในเฟรมเดียว
+    end
+end)
+
+-- 2. ระบบดูดเลือดความเร็วสูง (High-Speed Life Steal)
+local function ultraVampire()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        if v:IsA("Humanoid") and not game.Players:GetPlayerFromCharacter(v.Parent) then
+            local root = v.Parent:FindFirstChild("HumanoidRootPart")
+            if root then
+                local dist = (root.Position - char.HumanoidRootPart.Position).Magnitude
+                
+                -- ระยะทำการ 80 เมตร (กว้างขึ้น)
+                if dist < 80 then
+                    -- ขยายร่างเป็น Titan (100 เมตร) เพื่อให้มีดฟันโดนง่ายสุดๆ
+                    root.Size = Vector3.new(100, 100, 100)
+                    root.Transparency = 0.95
+                    root.CanCollide = false
+                    
+                    -- ดูดวิญญาณซอมบี้ (ตายทันที)
+                    if v.Health > 0 then
+                        v.Health = 0
+                    end
+                end
+            end
+        end
+    end
+end
+
+button.Activated:Connect(function()
+    active = not active
+    if active then
+        button.Text = "Overdrive ทำงาน! 🧛🔥"
+        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
+        task.spawn(function()
+            while active do
+                ultraVampire()
+                task.wait(0.1) -- ทำงานถี่ขึ้นเพื่อความไว
+            end
+        end)
+    else
+        button.Text = "เปิดมีดแวมไพร์อัพเกรด 🔪"
+        button.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+        button.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
