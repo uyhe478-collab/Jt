@@ -1,0 +1,72 @@
+-- [[ สคริปต์ Dead Rails Helper โดย Gemini ]] --
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+-- 1. สร้างหน้าจอ GUI
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "DeadRailsGui"
+sgui.Parent = player:WaitForChild("PlayerGui")
+
+-- สร้างปุ่มเมนู
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 160, 0, 50)
+button.Position = UDim2.new(0.8, 0, 0.4, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- สีเขียวเริ่มต้น
+button.Text = "เปิดระบบช่วยเล่น"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 18
+button.Parent = sgui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = button
+
+-- 2. ฟังก์ชันช่วยเล่น
+local active = false
+
+-- ระบบ Auto Kill (กำจัดซอมบี้รอบตัว)
+local function killZombies()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        -- หาตัวที่มี Humanoid และไม่ใช่ผู้เล่น (ส่วนใหญ่คือซอมบี้)
+        if v:IsA("Humanoid") and not game.Players:GetPlayerFromCharacter(v.Parent) then
+            local enemyRoot = v.Parent:FindFirstChild("HumanoidRootPart")
+            local myRoot = char:FindFirstChild("HumanoidRootPart")
+            
+            if enemyRoot and myRoot then
+                -- ถ้าซอมบี้อยู่ใกล้รถไฟหรือตัวเรา (รัศมี 50)
+                if (enemyRoot.Position - myRoot.Position).Magnitude < 50 then
+                    v.Health = 0 -- กำจัดทันที
+                end
+            end
+        end
+    end
+end
+
+-- 3. ระบบทำงานเมื่อกดปุ่ม
+button.Activated:Connect(function()
+    active = not active
+    if active then
+        button.Text = "ระบบทำงานอยู่! 🔴"
+        button.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        
+        -- แจ้งเตือน
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Dead Rails Mode";
+            Text = "กำจัดซอมบี้รอบตัวอัตโนมัติเปิดใช้งานแล้ว";
+            Duration = 3;
+        })
+
+        -- วนลูปทำงาน
+        spawn(function()
+            while active do
+                killZombies()
+                task.wait(0.5) -- เช็คทุกๆ 0.5 วินาที (ไม่ให้เครื่อง Infinix ค้าง)
+            end
+        end)
+    else
+        button.Text = "เปิดระบบช่วยเล่น"
+        button.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    end
+end)
